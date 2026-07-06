@@ -1,9 +1,12 @@
 from typing import Optional
 
+import allure
+
 from automation.clients.base_client import BaseClient
 
 
 class RisksClient(BaseClient):
+    @allure.step("Get risks (severity={severity}, status={status}, file_id={file_id})")
     def get_risks(
         self,
         severity: Optional[str] = None,

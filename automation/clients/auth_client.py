@@ -1,7 +1,10 @@
+import allure
+
 from automation.clients.base_client import BaseClient
 
 
 class AuthClient(BaseClient):
+    @allure.step("Login with email {email}")
     def login(self, email: str, password: str) -> dict:
         response = self.post("/auth/login", json={"email": email, "password": password})
         return {"status_code": response.status_code, "body": self._safe_json(response)}

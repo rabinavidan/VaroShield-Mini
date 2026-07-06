@@ -1,3 +1,4 @@
+import allure
 from playwright.sync_api import Page
 
 
@@ -6,11 +7,14 @@ class RisksPage:
         self.page = page
         self.base_url = base_url
 
+    @allure.step("Open risks page")
     def open(self) -> None:
         self.page.goto(f"{self.base_url}/risks")
 
+    @allure.step("Read risks table text")
     def risks_table_text(self) -> str:
         return self.page.text_content('[data-testid="risks-table"]') or ""
 
+    @allure.step("Filter risks by severity {severity}")
     def filter_by_severity(self, severity: str) -> None:
         self.page.select_option('[data-testid="severity-filter"]', severity)
