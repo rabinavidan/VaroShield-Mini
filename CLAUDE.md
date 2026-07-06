@@ -17,6 +17,24 @@ docker compose up -d --build
 - Frontend: http://localhost:3000
 - Postgres: localhost:5432 (db/user/pass all `varoshield`)
 
+Ports in the committed `docker-compose.yml` must stay 5432/8000/3000 — CI's
+health-check step and test env vars hardcode `localhost:8000`/`:3000`. If those
+ports collide with something else on your machine, don't edit the committed
+file; add a gitignored `docker-compose.override.yml` instead (`docker compose`
+merges it automatically). Compose concatenates `ports:` lists by default, so a
+plain override list ends up requesting *both* the old and new port and fails
+the same way — use the `!override` YAML tag on the `ports:` key to fully
+replace it:
+```yaml
+services:
+  backend:
+    ports: !override
+      - "8010:8000"
+```
+The Postgres data lives in the named volume `varoshield_pgdata`, so it
+persists across `docker compose up`/`down` (not `down -v`) — don't assume a
+fresh container means a fresh database.
+
 Seed users (created on backend startup, see `backend/app/auth.py`):
 | Email | Password | Role |
 |---|---|---|
@@ -24,6 +42,8 @@ Seed users (created on backend startup, see `backend/app/auth.py`):
 | user@example.com | user123 | user |
 
 Backend runs standalone too: `DATABASE_URL=... uvicorn app.main:app --reload` from `backend/` (defaults to Postgres on localhost, but accepts a `sqlite://` URL for lightweight local runs — see `backend/app/database.py`).
+
+**Seeding realistic demo data**: `FileItem.classification` and any `RiskAlert`s only get computed when a scan actually runs (`POST /scan/start`, then poll `GET /scan/{job_id}` until `"done"`) — inserting rows directly into Postgres skips that logic and leaves `classification: "unknown"` with no alerts. To seed a clean demo set: create files via `POST /files` (as admin, `Authorization: Bearer fake-admin-token`) with content that actually matches the sensitivity rules (an email address, a keyword like `ssn`/`secret`/`password`), optionally `POST /files/{id}/permissions` to share one with `everyone`, then trigger and wait out a scan so classification/risk are computed for real. To wipe accumulated test junk first (e.g. from repeated local Playwright runs), truncate the non-user tables directly: `docker exec varoshield-mini-postgres-1 psql -U varoshield -d varoshield -c "TRUNCATE TABLE risk_alerts, permissions, files, scan_jobs RESTART IDENTITY CASCADE;"` (leaves `users` untouched).
 
 ## Automation (tests)
 
@@ -42,6 +62,8 @@ allure serve allure-results             # view report
 Requires the stack to be running (`API_BASE_URL`, `UI_BASE_URL` env vars override defaults of `localhost:8000`/`:3000`, see `automation/utils/config.py`).
 
 Pytest markers (`automation/pytest.ini`): `api`, `ui`, `smoke`, `regression`, `permissions`, `scan`, `risks`. CI (`.github/workflows/automation-ci.yml`) only runs `smoke` + layer marker — new tests should carry a marker or they won't run in CI's smoke gate.
+
+After the suite runs, CI generates the Allure HTML report (via the Allure CLI, downloaded inline — there's no dedicated setup-allure action) and publishes it to GitHub Pages, then writes the link into the Job Summary. The `deploy-report` job only runs `if: github.event_name == 'push'` — GitHub's auto-created `github-pages` environment restricts deployment by branch, and a PR's merge ref (`refs/pull/N/merge`) can't be added to that allow-list, so PR runs skip the deploy (by design, not a failure) and only push-to-`main` runs actually publish. Deploying Pages requires the repo to be public (private repos need a paid plan for Pages).
 
 ## Frontend only
 
@@ -73,7 +95,17 @@ Tests (Pytest/Playwright) --> API + UI
 - Models (`models.py`): `User`, `FileItem` (1:N `Permission`, `RiskAlert` with cascade delete), `ScanJob`, `RiskAlert`. `FileItem.classification` starts `"unknown"` until a scan runs.
 
 ### Frontend (`frontend/src`)
-Plain React + Vite + TS, no state library — pages fetch directly via `api/client.ts`. Auth token/role stored in `localStorage` (tests set this directly via `page.evaluate`, bypassing the login UI — see `authenticated_page` fixture in `automation/conftest.py`).
+Plain React + Vite + TS, no state library — pages fetch directly via `api/client.ts`. All styling lives in one global `index.css` (no CSS modules); design tokens (colors, fonts) are CSS custom properties on `:root`. Type system is Manrope (display/headings) + IBM Plex Sans (body) + IBM Plex Mono (labels, data, badges), loaded via a Google Fonts `<link>` in `index.html`.
+
+- `auth.ts` — auth is reactive via a `useIsAuthenticated()` hook + `setAuth`/`clearAuth` helpers that dispatch a custom `window` event. **Don't call `localStorage.getItem("token")` directly in a component body expecting it to react to login/logout** — a plain `isAuthenticated()` check in `App.tsx`'s render body doesn't get re-evaluated on client-side navigation (React Router's `navigate()` doesn't force `App` to re-render, since `<App/>`'s element reference never changes across `BrowserRouter`'s internal re-renders — a real bug that shipped once: the navbar silently never appeared after a real login, only after a manual page refresh). Always go through the hook.
+- `components/Navbar.tsx` — brand mark, pill-style active nav links, a role badge, logout. Only rendered when `useIsAuthenticated()` is true (in `App.tsx`).
+- `components/StatCard.tsx` — takes a `tone` (`"default" | "warning" | "critical"`) so a stat card can visually flag itself (e.g. High Risks > 0 → critical/red) — set by the caller, not computed internally.
+- `components/PostureBreakdown.tsx` — the Dashboard's two bar charts (open alerts by severity, files by classification). Colors are **status colors** (reused from the existing `severity-high`/`severity-low` reds/greens), not a generated categorical palette — deliberately, since severity/classification are meaning-bearing, not arbitrary series. See `references/color-formula.md` in the `dataviz` skill if extending this.
+- `components/ScanConsole.tsx` — replaces a plain status string with a Queued/Scanning/Complete step tracker, an animated indeterminate progress bar, an elapsed timer, and a results summary using `ScanStatusResponse.summary` (scanned/sensitive counts) — data the backend already returned that the UI used to just discard.
+- `components/Pagination.tsx` — shared Prev/Next + range/page-count control used by Files and Risks.
+- `components/SystemMapDiagrams.tsx` — the two animated SVG flowcharts embedded on the login page (business logic, test layers); colors match the rest of the app, not a separate theme.
+- **Files/Risks filters**: Files' filter options are derived live from the loaded data (only classifications/owners that actually exist show up). Risks' severity/status options are static constants (`["high","low"]` / `["open"]` in `RisksPage.tsx`) matching what `risk_service.py` can actually produce, **not** derived from the async-loaded list — deriving them live would race against an existing automation test that selects a severity option immediately after the table appears, before the fetch resolves.
+- Pagination on both list pages is client-side (fetch everything, slice in the browser) and sorts newest-first (`id` descending) — the backend has no pagination/sort query params.
 
 ### Automation framework (`automation/`)
 - `clients/` — one class per API resource (`auth_client`, `files_client`, `scan_client`, `risks_client`, `dashboard_client`), all subclassing `base_client.BaseClient` (adds bearer header, logs non-2xx responses). API tests call these directly rather than raw `requests`.

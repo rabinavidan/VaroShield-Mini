@@ -19,6 +19,7 @@ flowchart TD
   Tests[Pytest + Playwright] --> API
   Tests --> UI
   CI[GitHub Actions] --> Tests
+  CI --> Pages[GitHub Pages: Allure report]
 ```
 
 ## Business flow
@@ -45,10 +46,21 @@ Sensitive file → Permission exposure → Async scan → Risk alert → Dashboa
 ## Tech stack
 
 - **Backend**: FastAPI, Python 3.11+, SQLAlchemy, PostgreSQL, Pydantic, Uvicorn
-- **Frontend**: React + Vite, TypeScript, plain CSS
+- **Frontend**: React + Vite, TypeScript, plain CSS (Manrope / IBM Plex Sans / IBM Plex Mono type system, semantic status colors, dataviz-informed charts)
 - **Automation**: Pytest, Playwright (Python), Requests, Allure Pytest, pytest-xdist
 - **Infra**: Docker, Docker Compose
-- **CI**: GitHub Actions
+- **CI**: GitHub Actions (builds the stack, runs the suite, publishes the Allure report to GitHub Pages)
+
+## Frontend highlights
+
+- **Login page** doubles as a system map: two animated diagrams (business logic
+  flow, test-automation layers) built straight from the repo's own architecture.
+- **Dashboard** has a live posture breakdown (open alerts by severity, files by
+  classification) as thin status-colored bar charts, plus a scan console with a
+  Queued → Scanning → Complete step tracker, an animated progress bar, a live
+  elapsed timer, and a results summary once a scan finishes.
+- **Files / Risks** pages have dynamic filters (options derived from the data
+  actually loaded, not hardcoded) and client-side pagination, newest-first.
 
 ## Test strategy
 
@@ -72,6 +84,7 @@ varoshield-mini/
   frontend/       React + Vite + TypeScript UI
   automation/     Pytest + Playwright test framework (clients, page objects, tests)
   .github/        GitHub Actions workflow
+  CLAUDE.md       Guidance for AI coding agents working in this repo
   docker-compose.yml
 ```
 
@@ -83,6 +96,19 @@ docker compose up -d --build
 
 - Backend docs: http://localhost:8000/docs
 - Frontend: http://localhost:3000
+
+If those ports are already taken by something else on your machine, don't edit
+`docker-compose.yml` (CI relies on 5432/8000/3000) — instead create a local,
+gitignored `docker-compose.override.yml` remapping the host ports; `docker
+compose` picks it up automatically. Use `!override` on the `ports:` key so it
+replaces rather than merges with the base file's list:
+
+```yaml
+services:
+  backend:
+    ports: !override
+      - "8010:8000"
+```
 
 Seed users:
 
@@ -106,19 +132,28 @@ pytest --alluredir=allure-results
 allure serve allure-results
 ```
 
+CI also generates the report and publishes it to GitHub Pages on every push to
+`main` — no local Allure install needed to view the latest run:
+https://rabinavidan.github.io/VaroShield-Mini/
+
 ## Demo script for interview
 
 1. Open this README and walk through the architecture diagram
 2. Start the app with `docker compose up -d --build`
-3. Log in as admin
+3. Log in as admin — point out the two animated system-map diagrams on the
+   login page (business logic flow, test-automation layers)
 4. Create a sensitive file (e.g. content with an email + credit card number)
 5. Expose it to the `everyone` group
-6. Start a scan from the dashboard
-7. Show the HIGH risk alert appear on the Risks page
+6. Start a scan from the dashboard — watch the scan console's step tracker and
+   progress bar, then the results summary and updated posture charts
+7. Show the HIGH risk alert appear on the Risks page; try the severity/status
+   filters and pagination
 8. Run the API tests: `pytest automation/tests/api -m api`
 9. Run the UI tests: `pytest automation/tests/ui -m ui`
-10. Show the Allure report: `allure serve allure-results`
-11. Show the GitHub Actions workflow (`.github/workflows/automation-ci.yml`)
+10. Show the live Allure report (https://rabinavidan.github.io/VaroShield-Mini/)
+    or run it locally: `allure serve allure-results`
+11. Show the GitHub Actions workflow (`.github/workflows/automation-ci.yml`),
+    including the Pages deploy step
 
 ## Talking points for interview
 
@@ -132,6 +167,10 @@ allure serve allure-results
 - Reports include enough context (job id, file id, request/response) for
   fast debugging.
 - Docker makes execution reproducible; CI gives release confidence.
+- The frontend isn't an afterthought either: a small dataviz-informed design
+  system (status-colored charts with hover tooltips, a real progress/step
+  tracker for the async scan) shows the same attention to detail on the UI
+  side, not just the test layer.
 
 ## Interview pitch
 
