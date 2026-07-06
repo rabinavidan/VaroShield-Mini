@@ -1,0 +1,1 @@
+# VaroShield Mini
