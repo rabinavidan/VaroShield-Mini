@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Test artifacts
+allure-results/
+allure-report/
+.pytest_cache/
+test-results/
+playwright-report/
+
+# Env
+.env
+*.db
+
+# OS
+.DS_Store

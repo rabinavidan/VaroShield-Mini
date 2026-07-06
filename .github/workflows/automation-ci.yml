@@ -1,0 +1,64 @@
+name: Automation CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  automation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and start app with Docker Compose
+        run: docker compose up -d --build
+
+      - name: Wait for backend health endpoint
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/health; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+            echo "Waiting for backend... ($i)"
+            sleep 2
+          done
+          echo "Backend did not become healthy in time"
+          exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install automation dependencies
+        run: pip install -r automation/requirements.txt
+
+      - name: Install Playwright browsers
+        run: playwright install --with-deps chromium
+
+      - name: Run API smoke tests
+        run: pytest automation/tests/api -m "smoke or api" --alluredir=allure-results
+        env:
+          API_BASE_URL: http://localhost:8000
+          UI_BASE_URL: http://localhost:3000
+
+      - name: Run UI smoke tests
+        run: pytest automation/tests/ui -m "smoke or ui" --alluredir=allure-results
+        env:
+          API_BASE_URL: http://localhost:8000
+          UI_BASE_URL: http://localhost:3000
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Show docker logs on failure
+        if: failure()
+        run: docker compose logs
