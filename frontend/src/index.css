@@ -308,6 +308,76 @@ select:focus-visible {
   font-size: 0.82rem;
 }
 
+.btn-outline {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  background: var(--surface-alt);
+}
+
+.btn-outline:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: var(--surface);
+}
+
+/* ---------- Filters & pagination ---------- */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.filter-bar label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+}
+
+.filter-bar select {
+  min-width: 140px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.pagination-summary {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pagination-page {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
 /* ---------- Tables ---------- */
 
 table {
@@ -461,6 +531,198 @@ td:first-child {
 
 @media (prefers-reduced-motion: reduce) {
   .status-running::before { animation: none; }
+}
+
+/* ---------- Scan console ---------- */
+
+.scan-console {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.4rem 1.35rem;
+  box-shadow: var(--shadow);
+  margin-top: 1.5rem;
+  max-width: 640px;
+}
+
+.scan-console-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.1rem;
+}
+
+.scan-console-job {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.scan-console-elapsed {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+.scan-steps {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.scan-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.scan-step-dot {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: transparent;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.scan-step-label {
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.scan-connector {
+  flex: 1 1 auto;
+  height: 2px;
+  background: var(--border);
+  margin: 10px 6px 0;
+  transition: background 0.3s ease;
+}
+
+.scan-connector--filled {
+  background: var(--accent);
+}
+
+.scan-connector--failed {
+  background: var(--risk-high);
+}
+
+.scan-step--done .scan-step-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.scan-step--done .scan-step-label {
+  color: var(--ink);
+}
+
+.scan-step--current .scan-step-dot {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.scan-step--current .scan-step-dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0.5;
+  animation: scan-pulse-ring 1.4s ease-out infinite;
+}
+
+.scan-step--current .scan-step-label {
+  color: var(--accent);
+}
+
+.scan-step--failed .scan-step-dot {
+  background: var(--risk-high);
+  border-color: var(--risk-high);
+  color: #ffffff;
+}
+
+.scan-step--failed .scan-step-label {
+  color: var(--risk-high);
+}
+
+@keyframes scan-pulse-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.scan-progress-track {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.scan-progress-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+}
+
+.scan-progress-active {
+  width: 40%;
+  background: var(--accent);
+  animation: scan-indeterminate 1.3s ease-in-out infinite;
+}
+
+.scan-progress-done {
+  left: 0;
+  width: 100%;
+  background: var(--risk-low);
+}
+
+.scan-progress-failed {
+  left: 0;
+  width: 100%;
+  background: var(--risk-high);
+}
+
+@keyframes scan-indeterminate {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+.scan-result {
+  margin-top: 0.9rem;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.scan-result strong {
+  font-family: var(--font-mono);
+}
+
+.scan-result-failed {
+  color: var(--risk-high);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-step--current .scan-step-dot::after {
+    animation: none;
+  }
+
+  .scan-progress-active {
+    animation: none;
+    left: 30%;
+  }
 }
 
 /* ---------- Misc ---------- */

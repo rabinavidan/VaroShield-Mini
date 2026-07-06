@@ -1,5 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, FileItem } from "../api/client";
+import Pagination from "../components/Pagination";
+
+const PAGE_SIZE = 8;
 
 export default function FilesPage() {
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -8,6 +11,11 @@ export default function FilesPage() {
   const [owner, setOwner] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [error, setError] = useState("");
+
+  const [classificationFilter, setClassificationFilter] = useState("");
+  const [exposureFilter, setExposureFilter] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState("");
+  const [page, setPage] = useState(1);
 
   async function loadFiles() {
     try {
@@ -21,6 +29,10 @@ export default function FilesPage() {
   useEffect(() => {
     loadFiles();
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [classificationFilter, exposureFilter, ownerFilter]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -45,6 +57,19 @@ export default function FilesPage() {
       setError(err instanceof Error ? err.message : "Failed to update permission");
     }
   }
+
+  const classifications = Array.from(new Set(files.map((f) => f.classification))).sort();
+  const owners = Array.from(new Set(files.map((f) => f.owner))).sort();
+
+  const filteredFiles = files
+    .filter((f) => !classificationFilter || f.classification === classificationFilter)
+    .filter((f) => !exposureFilter || (exposureFilter === "public" ? f.is_public : !f.is_public))
+    .filter((f) => !ownerFilter || f.owner === ownerFilter)
+    .sort((a, b) => b.id - a.id);
+
+  const pageCount = Math.max(1, Math.ceil(filteredFiles.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedFiles = filteredFiles.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="page">
@@ -91,6 +116,51 @@ export default function FilesPage() {
         </button>
       </form>
 
+      <div className="filter-bar">
+        <label>
+          Classification
+          <select
+            data-testid="files-classification-filter"
+            value={classificationFilter}
+            onChange={(e) => setClassificationFilter(e.target.value)}
+          >
+            <option value="">All</option>
+            {classifications.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Exposure
+          <select
+            data-testid="files-exposure-filter"
+            value={exposureFilter}
+            onChange={(e) => setExposureFilter(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </label>
+        <label>
+          Owner
+          <select
+            data-testid="files-owner-filter"
+            value={ownerFilter}
+            onChange={(e) => setOwnerFilter(e.target.value)}
+          >
+            <option value="">All</option>
+            {owners.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <table data-testid="files-table">
         <thead>
           <tr>
@@ -103,7 +173,7 @@ export default function FilesPage() {
           </tr>
         </thead>
         <tbody>
-          {files.map((file) => (
+          {pagedFiles.map((file) => (
             <tr key={file.id}>
               <td>{file.id}</td>
               <td>{file.name}</td>
@@ -125,6 +195,14 @@ export default function FilesPage() {
           ))}
         </tbody>
       </table>
+
+      <Pagination
+        page={currentPage}
+        pageCount={pageCount}
+        totalItems={filteredFiles.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
