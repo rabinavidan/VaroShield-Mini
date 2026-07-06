@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import CopyrightBar from "./components/CopyrightBar";
 import Navbar from "./components/Navbar";
 import DashboardPage from "./pages/DashboardPage";
 import FilesPage from "./pages/FilesPage";
@@ -19,6 +20,7 @@ export default function App() {
 
   return (
     <>
+      <CopyrightBar />
       {authenticated && <Navbar />}
       <Routes>
         <Route path="/login" element={<LoginPage />} />

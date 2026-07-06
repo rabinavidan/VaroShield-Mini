@@ -2,7 +2,7 @@ import allure
 import pytest
 
 from automation.utils.logger import logger
-from automation.utils.test_data import non_sensitive_content, unique_name
+from automation.utils.test_data import safe_content, unique_name
 
 
 @allure.severity(allure.severity_level.BLOCKER)
@@ -14,7 +14,7 @@ def test_admin_can_create_file(files_client):
 
     with allure.step(f"Create file {name} as admin"):
         file_item = files_client.create_file(
-            name=name, content=non_sensitive_content(), owner="finance", is_public=False
+            name=name, content=safe_content(), owner="finance", is_public=False
         )
         logger.info("Created file_id=%s", file_item["id"])
         allure.attach(str(file_item), name="created-file")
@@ -47,7 +47,7 @@ def test_get_files_returns_created_file(files_client):
 
     with allure.step(f"Create file {name}"):
         created = files_client.create_file(
-            name=name, content=non_sensitive_content(), owner="engineering", is_public=False
+            name=name, content=safe_content(), owner="engineering", is_public=False
         )
 
     with allure.step("Fetch files list"):

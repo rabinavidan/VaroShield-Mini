@@ -3,7 +3,7 @@ import pytest
 
 from automation.utils.logger import logger
 from automation.utils.test_data import (
-    non_sensitive_content,
+    safe_content,
     sensitive_content,
     unique_name,
 )
@@ -97,11 +97,11 @@ def test_private_sensitive_file_does_not_create_high_risk(
 @allure.title("Non-sensitive public file creates a LOW risk alert")
 @pytest.mark.api
 @pytest.mark.risks
-def test_non_sensitive_public_file_creates_low_risk(files_client, scan_client, risks_client):
+def test_safe_public_file_creates_low_risk(files_client, scan_client, risks_client):
     with allure.step("Create a public file with non-sensitive content"):
         file_item = files_client.create_file(
             name=unique_name("public-non-sensitive"),
-            content=non_sensitive_content(),
+            content=safe_content(),
             owner="engineering",
             is_public=True,
         )

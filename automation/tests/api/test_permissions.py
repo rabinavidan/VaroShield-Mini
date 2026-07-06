@@ -1,7 +1,7 @@
 import allure
 import pytest
 
-from automation.utils.test_data import non_sensitive_content, unique_name
+from automation.utils.test_data import safe_content, unique_name
 
 
 @allure.severity(allure.severity_level.CRITICAL)
@@ -12,7 +12,7 @@ def test_admin_can_update_file_permissions(files_client):
     with allure.step("Create a file as admin"):
         file_item = files_client.create_file(
             name=unique_name("perm-file"),
-            content=non_sensitive_content(),
+            content=safe_content(),
             owner="finance",
             is_public=False,
         )
@@ -34,7 +34,7 @@ def test_regular_user_cannot_update_permissions(files_client, user_files_client)
     with allure.step("Create a file as admin"):
         file_item = files_client.create_file(
             name=unique_name("perm-blocked"),
-            content=non_sensitive_content(),
+            content=safe_content(),
             owner="finance",
             is_public=False,
         )

@@ -16,20 +16,20 @@ SENSITIVE_KEYWORDS = ["password", "secret", "ssn", "credit_card", "email"]
 
 def classify_content(content: str) -> str:
     if not content:
-        return "non_sensitive"
+        return "safe"
 
     lowered = content.lower()
 
     if EMAIL_PATTERN.search(content):
-        return "sensitive"
+        return "risky"
     if CREDIT_CARD_PATTERN.search(content):
-        return "sensitive"
+        return "risky"
     if PHONE_PATTERN.search(content):
-        return "sensitive"
+        return "risky"
     if any(keyword in lowered for keyword in SENSITIVE_KEYWORDS):
-        return "sensitive"
+        return "risky"
 
-    return "non_sensitive"
+    return "safe"
 
 
 def new_job_id() -> str:
@@ -53,7 +53,7 @@ async def run_scan_job(job_id: str) -> None:
 
         for file_item in files:
             file_item.classification = classify_content(file_item.content)
-            if file_item.classification == "sensitive":
+            if file_item.classification == "risky":
                 sensitive_count += 1
             evaluate_file_risk(db, file_item)
 

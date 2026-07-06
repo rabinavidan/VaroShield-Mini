@@ -26,6 +26,7 @@ def create_file(
         name=payload.name,
         content=payload.content,
         owner=payload.owner,
+        source=payload.source,
         is_public=payload.is_public,
         classification="unknown",
     )
@@ -47,3 +48,18 @@ def get_file(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
     return file_item
+
+
+@router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_file(
+    file_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    file_item = db.query(FileItem).filter(FileItem.id == file_id).first()
+    if not file_item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        )
+    db.delete(file_item)
+    db.commit()

@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
+from app.constants import EVERYONE_ACCESS_LEVELS, EVERYONE_GROUP
 from app.database import Base
 
 
@@ -23,6 +24,7 @@ class FileItem(Base):
     content = Column(String, nullable=False, default="")
     owner = Column(String, nullable=False)
     classification = Column(String, nullable=False, default="unknown")
+    source = Column(String, nullable=False, default="other")
     is_public = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -32,6 +34,13 @@ class FileItem(Base):
     risk_alerts = relationship(
         "RiskAlert", back_populates="file", cascade="all, delete-orphan"
     )
+
+    @property
+    def is_shared_with_everyone(self) -> bool:
+        return any(
+            p.user_group == EVERYONE_GROUP and p.access in EVERYONE_ACCESS_LEVELS
+            for p in self.permissions
+        )
 
 
 class Permission(Base):

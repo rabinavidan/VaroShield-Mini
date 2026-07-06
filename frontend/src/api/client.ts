@@ -41,7 +41,9 @@ export interface FileItem {
   name: string;
   owner: string;
   classification: string;
+  source: string;
   is_public: boolean;
+  is_shared_with_everyone: boolean;
   created_at: string;
 }
 
@@ -81,6 +83,7 @@ export const api = {
     name: string;
     content: string;
     owner: string;
+    source: string;
     is_public: boolean;
   }) =>
     request<FileItem>("/files", {
@@ -94,12 +97,21 @@ export const api = {
       body: JSON.stringify({ user_group: userGroup, access }),
     }),
 
+  deleteFile: (fileId: number) =>
+    request<void>(`/files/${fileId}`, { method: "DELETE" }),
+
   startScan: () => request<ScanStatus>("/scan/start", { method: "POST" }),
 
   getScanStatus: (jobId: string) => request<ScanStatus>(`/scan/${jobId}`),
 
   getRisks: (severity?: string) =>
     request<RiskAlert[]>(`/risks${severity ? `?severity=${severity}` : ""}`),
+
+  resolveRisk: (riskId: number) =>
+    request<RiskAlert>(`/risks/${riskId}/resolve`, { method: "POST" }),
+
+  deleteRisk: (riskId: number) =>
+    request<void>(`/risks/${riskId}`, { method: "DELETE" }),
 
   getDashboardSummary: () =>
     request<DashboardSummary>("/dashboard/summary"),

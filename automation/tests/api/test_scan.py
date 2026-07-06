@@ -3,7 +3,7 @@ import pytest
 
 from automation.utils.logger import logger
 from automation.utils.test_data import (
-    non_sensitive_content,
+    safe_content,
     sensitive_content,
     unique_name,
 )
@@ -45,18 +45,18 @@ def test_sensitive_file_classification_after_scan(files_client, scan_client):
         scanned_file = files_client.get_file(file_item["id"])
         allure.attach(str(scanned_file), name="scanned-file")
 
-    assert scanned_file["classification"] == "sensitive"
+    assert scanned_file["classification"] == "risky"
 
 
 @allure.severity(allure.severity_level.CRITICAL)
-@allure.title("Non-sensitive file is classified as non_sensitive after scan")
+@allure.title("Non-sensitive file is classified as safe after scan")
 @pytest.mark.api
 @pytest.mark.scan
-def test_non_sensitive_file_classification_after_scan(files_client, scan_client):
+def test_safe_file_classification_after_scan(files_client, scan_client):
     with allure.step("Create a file with non-sensitive content"):
         file_item = files_client.create_file(
             name=unique_name("non-sensitive"),
-            content=non_sensitive_content(),
+            content=safe_content(),
             owner="engineering",
             is_public=False,
         )
@@ -69,4 +69,4 @@ def test_non_sensitive_file_classification_after_scan(files_client, scan_client)
         scanned_file = files_client.get_file(file_item["id"])
         allure.attach(str(scanned_file), name="scanned-file")
 
-    assert scanned_file["classification"] == "non_sensitive"
+    assert scanned_file["classification"] == "safe"

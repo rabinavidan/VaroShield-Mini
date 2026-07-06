@@ -15,7 +15,7 @@ def get_summary(
 ):
     total_files = db.query(FileItem).count()
     sensitive_files = (
-        db.query(FileItem).filter(FileItem.classification == "sensitive").count()
+        db.query(FileItem).filter(FileItem.classification == "risky").count()
     )
     public_files = db.query(FileItem).filter(FileItem.is_public.is_(True)).count()
     high_risks = (

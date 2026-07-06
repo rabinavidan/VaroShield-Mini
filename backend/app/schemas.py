@@ -18,6 +18,7 @@ class FileCreateRequest(BaseModel):
     name: str
     content: str = ""
     owner: str
+    source: str = "other"
     is_public: bool = False
 
 
@@ -28,7 +29,9 @@ class FileResponse(BaseModel):
     name: str
     owner: str
     classification: str
+    source: str
     is_public: bool
+    is_shared_with_everyone: bool
     created_at: datetime
 
 
