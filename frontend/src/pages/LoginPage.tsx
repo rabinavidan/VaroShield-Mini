@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
+import { setAuth } from "../auth";
 import { BusinessLogicFlow, TestAutomationFlow } from "../components/SystemMapDiagrams";
 
 export default function LoginPage() {
@@ -20,8 +21,7 @@ export default function LoginPage() {
     setError("");
     try {
       const result = await api.login(email, password);
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("role", result.role);
+      setAuth(result.token, result.role);
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -52,6 +52,9 @@ export default function LoginPage() {
           </button>
           {error && <p className="error">{error}</p>}
         </form>
+        <p className="login-hint">
+          admin@example.com / admin123 — seeded on backend startup
+        </p>
       </div>
 
       <div className="login-map">

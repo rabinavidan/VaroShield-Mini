@@ -22,7 +22,12 @@ export default function RisksPage() {
 
   return (
     <div className="page">
-      <h1>Risks</h1>
+      <div className="page-head">
+        <div>
+          <h1>Risks</h1>
+          <p>Every open alert, with the rule that raised it.</p>
+        </div>
+      </div>
       {error && <p className="error">{error}</p>}
       <select
         data-testid="severity-filter"
@@ -48,9 +53,13 @@ export default function RisksPage() {
           {risks.map((risk) => (
             <tr key={risk.id}>
               <td>{risk.file_id}</td>
-              <td className={`severity-${risk.severity}`}>{risk.severity}</td>
+              <td>
+                <span className={`badge badge-severity-${risk.severity}`}>{risk.severity}</span>
+              </td>
               <td>{risk.reason}</td>
-              <td>{risk.status}</td>
+              <td>
+                <span className={`badge badge-status-${risk.status}`}>{risk.status}</span>
+              </td>
             </tr>
           ))}
         </tbody>

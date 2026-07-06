@@ -4,22 +4,22 @@ import DashboardPage from "./pages/DashboardPage";
 import FilesPage from "./pages/FilesPage";
 import LoginPage from "./pages/LoginPage";
 import RisksPage from "./pages/RisksPage";
-
-function isAuthenticated(): boolean {
-  return Boolean(localStorage.getItem("token"));
-}
+import { useIsAuthenticated } from "./auth";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
-  if (!isAuthenticated()) {
+  const authenticated = useIsAuthenticated();
+  if (!authenticated) {
     return <Navigate to="/login" replace />;
   }
   return children;
 }
 
 export default function App() {
+  const authenticated = useIsAuthenticated();
+
   return (
     <>
-      {isAuthenticated() && <Navbar />}
+      {authenticated && <Navbar />}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

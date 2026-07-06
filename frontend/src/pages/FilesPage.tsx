@@ -48,7 +48,12 @@ export default function FilesPage() {
 
   return (
     <div className="page">
-      <h1>Files</h1>
+      <div className="page-head">
+        <div>
+          <h1>Files</h1>
+          <p>Create a file, then expose it to see how the risk engine reacts.</p>
+        </div>
+      </div>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <input
@@ -103,10 +108,16 @@ export default function FilesPage() {
               <td>{file.id}</td>
               <td>{file.name}</td>
               <td>{file.owner}</td>
-              <td>{file.classification}</td>
-              <td>{file.is_public ? "yes" : "no"}</td>
               <td>
-                <button onClick={() => exposeToEveryone(file.id)}>
+                <span className={`badge badge-${file.classification}`}>{file.classification}</span>
+              </td>
+              <td>
+                <span className={`badge badge-${file.is_public ? "public" : "private"}`}>
+                  {file.is_public ? "public" : "private"}
+                </span>
+              </td>
+              <td>
+                <button className="btn-warning btn-sm" onClick={() => exposeToEveryone(file.id)}>
                   Expose to Everyone
                 </button>
               </td>
