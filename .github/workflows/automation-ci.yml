@@ -5,6 +5,15 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   automation:
     runs-on: ubuntu-latest
@@ -59,6 +68,41 @@ jobs:
           name: allure-results
           path: allure-results
 
+      - name: Generate Allure report
+        if: always()
+        run: |
+          if [ -d allure-results ]; then
+            curl -o /tmp/allure.tgz -Ls https://github.com/allure-framework/allure2/releases/download/2.32.0/allure-2.32.0.tgz
+            tar -zxf /tmp/allure.tgz -C /tmp
+            /tmp/allure-2.32.0/bin/allure generate allure-results -o allure-report --clean
+          else
+            mkdir -p allure-report
+            echo "<html><body><h1>No Allure results were produced (an earlier step failed before tests ran).</h1></body></html>" > allure-report/index.html
+          fi
+
+      - name: Upload Pages artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report
+
       - name: Show docker logs on failure
         if: failure()
         run: docker compose logs
+
+  deploy-report:
+    needs: automation
+    if: always() && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Allure report to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Add report link to job summary
+        run: |
+          echo "### Allure report" >> "$GITHUB_STEP_SUMMARY"
+          echo "[View the latest Allure report](${{ steps.deployment.outputs.page_url }})" >> "$GITHUB_STEP_SUMMARY"
