@@ -92,7 +92,7 @@ jobs:
 
   deploy-report:
     needs: automation
-    if: always()
+    if: always() && github.event_name == 'push'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
