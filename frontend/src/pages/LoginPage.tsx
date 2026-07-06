@@ -29,60 +29,85 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-box">
-        <h1>VaroShield Mini</h1>
-        <form onSubmit={handleSubmit} style={{ flexDirection: "column", alignItems: "stretch" }}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            data-testid="login-email"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            data-testid="login-password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button type="submit" data-testid="login-submit">
-            Login
-          </button>
-          {error && <p className="error">{error}</p>}
-        </form>
-        <p className="login-hint">
-          admin@example.com / admin123 — seeded on backend startup
+    <div className="login-hero">
+      <div className="login-hero-head">
+        <p className="login-eyebrow">VaroShield Mini</p>
+        <h1 className="login-headline">Data security posture, live.</h1>
+        <p className="login-subcopy">
+          A small DSPM simulation: sensitive-data discovery, permission exposure, async
+          scanning, and risk alerting — with the automation to prove it works.
         </p>
+        <div className="login-stats">
+          <div>
+            <strong>21</strong>
+            <span>Automated tests</span>
+          </div>
+          <div>
+            <strong>100%</strong>
+            <span>Pass rate</span>
+          </div>
+          <div>
+            <strong>2</strong>
+            <span>Risk severities detected</span>
+          </div>
+        </div>
       </div>
 
-      <div className="login-map">
-        <section className="flow-panel">
-          <p className="flow-eyebrow">Business logic</p>
-          <h2>How a file becomes a risk alert</h2>
-          <p className="flow-desc">
-            Every alert on the dashboard traces back to this path: a file is created,
-            possibly exposed, scanned asynchronously, and judged against the risk rules.
+      <div className="login-page">
+        <div className="login-box">
+          <h2>Sign in</h2>
+          <form onSubmit={handleSubmit} style={{ flexDirection: "column", alignItems: "stretch" }}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              data-testid="login-email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              data-testid="login-password"
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button type="submit" data-testid="login-submit">
+              Login
+            </button>
+            {error && <p className="error">{error}</p>}
+          </form>
+          <p className="login-hint">
+            admin@example.com / admin123 — seeded on backend startup
           </p>
-          <BusinessLogicFlow revealed={revealed} />
-          <div className="flow-legend">
-            <span><span className="flow-dot flow-dot--high" />HIGH — sensitive + exposed</span>
-            <span><span className="flow-dot flow-dot--low" />LOW — non-sensitive + public</span>
-            <span><span className="flow-dot flow-dot--safe" />SAFE — sensitive + private, no alert</span>
-          </div>
-        </section>
+        </div>
 
-        <section className="flow-panel">
-          <p className="flow-eyebrow">Test automation</p>
-          <h2>Two lanes, one stack, one report</h2>
-          <p className="flow-desc">
-            API tests own the business-logic coverage; UI tests cover critical
-            journeys only. Both lanes exercise the same running stack and produce
-            one Allure report, published from CI.
-          </p>
-          <TestAutomationFlow revealed={revealed} />
-        </section>
+        <div className="login-map">
+          <section className="flow-panel">
+            <p className="flow-eyebrow">Business logic</p>
+            <h2>How a file becomes a risk alert</h2>
+            <p className="flow-desc">
+              Every alert on the dashboard traces back to this path: a file is created,
+              possibly exposed, scanned asynchronously, and judged against the risk rules.
+            </p>
+            <BusinessLogicFlow revealed={revealed} />
+            <div className="flow-legend">
+              <span><span className="flow-dot flow-dot--high" />HIGH — sensitive + exposed</span>
+              <span><span className="flow-dot flow-dot--low" />LOW — non-sensitive + public</span>
+              <span><span className="flow-dot flow-dot--safe" />SAFE — sensitive + private, no alert</span>
+            </div>
+          </section>
+
+          <section className="flow-panel">
+            <p className="flow-eyebrow">Test automation</p>
+            <h2>Two lanes, one stack, one report</h2>
+            <p className="flow-desc">
+              API tests own the business-logic coverage; UI tests cover critical
+              journeys only. Both lanes exercise the same running stack and produce
+              one Allure report, published from CI.
+            </p>
+            <TestAutomationFlow revealed={revealed} />
+          </section>
+        </div>
       </div>
     </div>
   );

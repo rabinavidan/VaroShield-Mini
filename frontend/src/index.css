@@ -1,21 +1,27 @@
 :root {
-  --bg: #f7f8fa;
+  /* Palette derived from Varonis's real production design tokens
+     (varonis.com's template stylesheet: --primary-dark-navy-*,
+     --primary-electric-blue, --primary-varonis-red-*, --highlight-cyber-green,
+     --extended-colors-goldenrod-*, --extended-colors-parrot-green-*, --neutrals-*) */
+  --bg: #f6f8fe;
   --surface: #ffffff;
-  --surface-alt: #f0f2f5;
-  --border: #e1e4ea;
-  --ink: #12151c;
-  --ink-dim: #5b6472;
-  --accent: #2554eb;
-  --accent-dark: #1d3fbf;
-  --accent-soft: #eaf0ff;
-  --risk-high: #dc2626;
-  --risk-high-soft: #fce8e8;
-  --risk-medium: #d97706;
-  --risk-medium-soft: #fdf3e2;
-  --risk-low: #059669;
-  --risk-low-soft: #e4f5ee;
-  --neutral-pill: #6b7280;
-  --neutral-pill-soft: #eef0f3;
+  --surface-alt: #e5e9fa;
+  --border: #dadff4;
+  --ink: #212234;
+  --ink-dim: #667085;
+  --accent: #0077ff;
+  --accent-dark: #2242cd;
+  --accent-soft: #e2f3ff;
+  --risk-high: #d21a27;
+  --risk-high-soft: #ffcece;
+  --risk-medium: #ad5200;
+  --risk-medium-soft: #ffe6bd;
+  --risk-low: #036642;
+  --risk-low-soft: #b8ffdb;
+  --neutral-pill: #667085;
+  --neutral-pill-soft: #e5e9fa;
+  --highlight: #8be000;
+  --highlight-soft: #d1f399;
   --radius: 10px;
   --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
   --font-display: "Manrope", system-ui, -apple-system, sans-serif;
@@ -72,7 +78,7 @@ h1 {
 }
 
 .navbar-brand svg {
-  color: #7c9bff;
+  color: #bae0ff;
 }
 
 .navbar-links {
@@ -86,7 +92,7 @@ h1 {
   gap: 0.45rem;
   padding: 0.45rem 0.8rem;
   border-radius: 999px;
-  color: #aab2c5;
+  color: #7379a7;
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9rem;
@@ -118,11 +124,12 @@ h1 {
 .role-badge {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #cdd4e0;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--highlight);
+  border: 1px solid rgba(139, 224, 0, 0.35);
+  background: rgba(139, 224, 0, 0.08);
   border-radius: 999px;
   padding: 0.25rem 0.6rem;
 }
@@ -286,7 +293,7 @@ select:focus-visible {
 
 .btn-ghost {
   background: transparent;
-  color: #d7dceb;
+  color: #7379a7;
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
@@ -300,7 +307,7 @@ select:focus-visible {
 }
 
 .btn-warning:hover {
-  background: #b25f04;
+  background: #8a4200;
 }
 
 .btn-sm {
@@ -749,13 +756,76 @@ td:first-child {
 
 /* ---------- Login ---------- */
 
+.login-hero {
+  background: var(--ink);
+  min-height: 100vh;
+  padding-bottom: 3.5rem;
+}
+
+.login-hero-head {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 2.25rem;
+}
+
+.login-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--highlight);
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.login-headline {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  color: #ffffff;
+  max-width: 18ch;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.login-subcopy {
+  color: #b7bdd6;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 56ch;
+  margin: 0 0 1.75rem;
+}
+
+.login-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+}
+
+.login-stats strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.login-stats span {
+  font-size: 0.72rem;
+  color: #9aa2bd;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .login-page {
   display: grid;
   grid-template-columns: minmax(300px, 380px) 1fr;
   gap: 2rem;
   align-items: start;
   max-width: 1100px;
-  margin: 3rem auto;
+  margin: 0 auto;
   padding: 0 1.5rem;
 }
 
@@ -767,7 +837,6 @@ td:first-child {
 @media (max-width: 860px) {
   .login-page {
     grid-template-columns: 1fr;
-    margin: 2rem auto;
   }
 }
 
@@ -784,8 +853,8 @@ td:first-child {
   gap: 1rem;
 }
 
-.login-box h1 {
-  font-size: 1.4rem;
+.login-box h2 {
+  font-size: 1.3rem;
 }
 
 .login-hint {
@@ -907,7 +976,7 @@ td:first-child {
 
 .flow-chip--safe rect {
   fill: var(--neutral-pill-soft);
-  stroke: #9ca3af;
+  stroke: #9aa2bd;
   stroke-width: 1.5;
 }
 
@@ -971,7 +1040,7 @@ svg.in-view .flow-chip {
 }
 
 .flow-dot--safe {
-  background: #9ca3af;
+  background: #9aa2bd;
 }
 
 @media (prefers-reduced-motion: reduce) {
