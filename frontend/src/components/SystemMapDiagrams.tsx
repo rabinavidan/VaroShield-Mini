@@ -8,6 +8,7 @@ import {
   SalesforceIcon,
   SlackIcon,
 } from "./SourceIcons";
+import { DockerIcon, PlaywrightIcon, PythonIcon } from "./TestIcons";
 
 interface FlowProps {
   revealed: boolean;
@@ -46,6 +47,30 @@ function SourceIconRow({ y }: { y: number }) {
           </g>
         </g>
       ))}
+    </g>
+  );
+}
+
+function IconBadge({
+  x,
+  y,
+  color,
+  label,
+  Icon,
+}: {
+  x: number;
+  y: number;
+  color?: string;
+  label: string;
+  Icon: ComponentType<{ size?: number }>;
+}) {
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <circle className="flow-source-badge" r="11" />
+      <g transform="translate(-8, -8)" style={color ? { color } : undefined}>
+        <Icon size={16} />
+      </g>
+      <title>{label}</title>
     </g>
   );
 }
@@ -235,6 +260,12 @@ export function TestAutomationFlow({ revealed }: FlowProps) {
           <circle className="flow-node-glow" cx="570" cy="55" r="4" />
         </g>
 
+        <g className="flow-detail-row" style={stagger("0.04s")}>
+          <IconBadge x={190} y={115} color="#3776AB" label="Python" Icon={PythonIcon} />
+          <IconBadge x={690} y={115} color="#3776AB" label="Python" Icon={PythonIcon} />
+          <IconBadge x={730} y={115} color="#2EAD33" label="Playwright" Icon={PlaywrightIcon} />
+        </g>
+
         <g className="flow-node" style={stagger("0.08s")}>
           <rect x="30" y="140" width="320" height="70" rx="10" />
           <text className="flow-label" x="190" y="169" textAnchor="middle">CLIENTS</text>
@@ -268,6 +299,10 @@ export function TestAutomationFlow({ revealed }: FlowProps) {
           <circle className="flow-node-glow" cx="240" cy="437" r="4" />
         </g>
 
+        <g className="flow-detail-row" style={stagger("0.31s")}>
+          <IconBadge x={450} y={497} color="#2496ED" label="Docker" Icon={DockerIcon} />
+        </g>
+
         <g className="flow-node" style={stagger("0.34s")}>
           <rect x="220" y="520" width="460" height="70" rx="10" />
           <text className="flow-label" x="450" y="549" textAnchor="middle">ALLURE RESULTS</text>
@@ -280,6 +315,10 @@ export function TestAutomationFlow({ revealed }: FlowProps) {
           <text className="flow-label" x="450" y="669" textAnchor="middle">CI: GITHUB ACTIONS</text>
           <text className="flow-sub" x="450" y="688" textAnchor="middle">build → health check → smoke tests</text>
           <circle className="flow-node-glow" cx="240" cy="675" r="4" />
+        </g>
+
+        <g className="flow-detail-row" style={stagger("0.43s")}>
+          <IconBadge x={450} y={735} color="#181717" label="GitHub Actions" Icon={GitHubIcon} />
         </g>
 
         <g className="flow-node flow-node--endpoint" style={stagger("0.48s")}>
