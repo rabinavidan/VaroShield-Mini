@@ -15,7 +15,7 @@ export default function Pagination({ page, pageCount, totalItems, pageSize, onPa
   const end = Math.min(page * pageSize, totalItems);
 
   return (
-    <div className="pagination">
+    <div className="pagination" data-testid="pagination">
       <span className="pagination-summary">
         {start}–{end} of {totalItems}
       </span>
@@ -23,17 +23,19 @@ export default function Pagination({ page, pageCount, totalItems, pageSize, onPa
         <button
           type="button"
           className="btn-outline btn-sm"
+          data-testid="pagination-prev"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
         >
           Prev
         </button>
-        <span className="pagination-page">
+        <span className="pagination-page" data-testid="pagination-page">
           Page {page} of {pageCount}
         </span>
         <button
           type="button"
           className="btn-outline btn-sm"
+          data-testid="pagination-next"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= pageCount}
         >

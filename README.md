@@ -76,6 +76,204 @@ Sensitive file → Permission exposure → Async scan → Risk alert → Dashboa
 - CI runs the full stack via Docker Compose and uploads Allure results for
   fast, readable debugging.
 
+## Testing layer, in depth
+
+The automation framework (`automation/`) is the actual point of this
+repository — the app underneath is intentionally small. This section walks
+through how it's built, layer by layer.
+
+### Folder layout
+
+```
+automation/
+  clients/          One class per API resource, all sharing a base HTTP client
+    base_client.py     Adds the bearer auth header, logs any non-2xx response
+    auth_client.py      /auth/login
+    files_client.py      /files, /files/{id}/permissions
+    scan_client.py         /scan/start, /scan/{job_id}, plus a poll-to-completion helper
+    risks_client.py          /risks
+    dashboard_client.py       /dashboard/summary
+  pages/             One Playwright page object per UI page (login, dashboard, files, risks)
+  tests/
+    api/             Business-logic coverage — auth, CRUD, scan lifecycle, risk rules
+    ui/              Critical user journeys only — no duplicate API coverage
+  utils/
+    config.py         Central env-driven config (base URLs, seed tokens) — the only place that reads os.getenv
+    polling.py         wait_until(): the one sanctioned way to wait on the async scan job
+    test_data.py        Content generators (sensitive_content, safe_content) and unique_name()
+    logger.py           Shared logger used by clients and tests
+  conftest.py        Fixtures: base URLs, tokens, pre-wired clients, an authenticated Playwright page
+  pytest.ini         Marker registry + test discovery config
+```
+
+### API clients: one class per resource, one base class for the plumbing
+
+Every client subclasses `BaseClient`, which owns the two things every request
+needs — the auth header and failure logging — so individual clients stay
+tiny:
+
+```python
+class BaseClient:
+    def _headers(self) -> dict:
+        headers = {"Content-Type": "application/json"}
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+        return headers
+
+    def _request(self, method: str, path: str, **kwargs) -> requests.Response:
+        response = requests.request(method, f"{self.base_url}{path}", headers=self._headers(), **kwargs)
+        if response.status_code >= 400:
+            logger.error("API call failed: %s %s -> %s %s", method, url, response.status_code, response.text)
+        return response
+```
+
+`ScanClient` is the clearest example of why this pays off — it wraps the
+raw endpoints *and* exposes a `start_scan_and_wait()` helper that hides the
+polling loop entirely, so tests just call one method and get a finished job
+back:
+
+```python
+@allure.step("Start scan and wait until it finishes")
+def start_scan_and_wait(self, timeout: int = 60, interval: int = 2) -> dict:
+    job = self.start_scan()
+    return wait_until(
+        action=lambda: self.get_scan_job(job["job_id"]),
+        condition=lambda response: response["status"] in ("done", "failed"),
+        timeout=timeout,
+        interval=interval,
+        error_message=f"Scan job {job['job_id']} did not finish",
+    )
+```
+
+API tests call these clients directly — never raw `requests` — so every test
+reads as business steps, not HTTP plumbing:
+
+```python
+@pytest.mark.api
+@pytest.mark.risks
+@pytest.mark.smoke
+def test_sensitive_public_file_creates_high_risk(files_client, scan_client, risks_client):
+    with allure.step("Create a public file with sensitive content"):
+        file_item = files_client.create_file(name=unique_name("public-sensitive"), content=sensitive_content(), owner="finance", is_public=True)
+    with allure.step("Run scan and wait for completion"):
+        scan_client.start_scan_and_wait()
+    with allure.step("Fetch risk alerts for the file"):
+        risks = risks_client.get_risks(file_id=file_item["id"])
+    assert risks[0]["severity"] == "high"
+```
+
+### Page objects: the UI equivalent, used only by `tests/ui`
+
+Same idea, Playwright side. Each page object hides selectors behind named
+methods, so a UI change only requires updating one file instead of every
+test that touches that page:
+
+```python
+class LoginPage:
+    def open(self) -> None:
+        self.page.goto(f"{self.base_url}/login")
+
+    def login(self, email: str, password: str) -> None:
+        self.page.fill('[data-testid="login-email"]', email)
+        self.page.fill('[data-testid="login-password"]', password)
+        self.page.click('[data-testid="login-submit"]')
+```
+
+Selectors are always `data-testid` attributes, never CSS classes or text
+content, so UI/CSS redesigns (the login page has had several) don't break
+the suite.
+
+### Fixtures (`conftest.py`): everything pre-wired, nothing constructed by hand in a test
+
+- `api_base_url` / `ui_base_url` / `admin_token` / `user_token` — session-scoped,
+  read once from `Config`.
+- `files_client` (admin token) vs. `user_files_client` (user token) — the
+  fixture name encodes *which role* the client acts as, so a permissions test
+  reads as `user_files_client.create_file(...)` and the intent is obvious at
+  the call site.
+- `authenticated_page` — a Playwright `page` that's already "logged in":
+  it navigates to `/login` and then injects the admin token/role straight
+  into `localStorage`, instead of filling the login form. This is deliberate:
+  the login *flow itself* is already covered by a dedicated UI test
+  (`test_login.py`), so every other UI test gets straight to the page it
+  actually wants to verify instead of re-proving login works dozens of times.
+
+### Test data (`utils/test_data.py`)
+
+`sensitive_content()` and `safe_content()` generate file bodies that either
+do or don't trip the backend's real classification rules (an email address,
+a credit-card-shaped number, a keyword like `ssn`/`secret`/`password` vs.
+plain prose) — so a scan run against them produces a genuine, non-mocked
+`risky`/`safe` split instead of a hard-coded fixture value. `unique_name()`
+suffixes a random token onto file names so repeated runs against the same
+database don't collide.
+
+### Async handling: `wait_until`, never `time.sleep`
+
+The scanner runs as a fire-and-forget background task with an artificial
+delay, so every test that starts a scan needs to wait for it — and
+`utils/polling.py` is the *only* sanctioned way to do that:
+
+```python
+def wait_until(action, condition, timeout=60, interval=2, error_message="Condition was not met"):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        last_result = action()
+        if condition(last_result):
+            return last_result
+        time.sleep(interval)
+    raise TimeoutError(f"{error_message}. Last result: {last_result}")
+```
+
+A fixed `time.sleep(N)` would either be too short (flaky) or too long
+(slow) depending on machine load; polling with a timeout self-corrects for
+both and fails loudly (with the last observed state attached) instead of
+silently asserting against stale data.
+
+### Markers: how tests are labeled, and how CI slices them
+
+Registered in `pytest.ini`:
+
+| Marker | Meaning |
+|---|---|
+| `api` | API-layer test |
+| `ui` | UI-layer test (Playwright) |
+| `smoke` | Fast, must-pass check used to gate CI |
+| `regression` | Broader coverage, not required for the CI gate |
+| `permissions` | Role/permission validation |
+| `scan` | Async scan job lifecycle |
+| `risks` | Risk-alert rule coverage |
+
+Every test carries a layer marker (`api`/`ui`) plus zero or more feature
+markers. CI doesn't run the whole suite — it runs two explicit slices:
+
+```bash
+pytest automation/tests/api -m "smoke or api"   # API smoke gate
+pytest automation/tests/ui  -m "smoke or ui"    # UI smoke gate
+```
+
+A new test that forgets a marker simply won't run in CI's gate — a
+deliberate trade-off that keeps the CI-required set small and fast while
+still letting `pytest -m regression` (or no `-m` at all, locally) run
+everything.
+
+### Reporting: Allure, not print statements
+
+Every client method and every test step is wrapped in `@allure.step(...)`,
+so a failure shows the exact business action that failed ("Create a public
+file with sensitive content" → "Run scan and wait for completion" → "Fetch
+risk alerts for the file"), not a raw stack trace. Tests also `allure.attach(...)`
+the actual response payloads (e.g. the risks list, the scanned file) so a
+failure can be root-caused from the report alone, without re-running
+anything locally. Severity levels (`BLOCKER`/`CRITICAL`/`NORMAL`) rank the
+same failure list by business impact.
+
+CI uploads the raw results as a build artifact on every run (`if: always()`,
+so a failed run still produces a report), generates the HTML report via the
+Allure CLI, and — only on a push to `main`, since a PR's merge ref can't be
+added to the Pages environment's branch allow-list — publishes it to GitHub
+Pages and links it from the job summary.
+
 ## Repository structure
 
 ```

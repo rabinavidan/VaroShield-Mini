@@ -297,6 +297,7 @@ export default function FilesPage() {
                 <input
                   type="checkbox"
                   aria-label="Select all files"
+                  data-testid="files-select-all"
                   checked={allFilteredSelected}
                   ref={(el) => {
                     if (el) el.indeterminate = !allFilteredSelected && someFilteredSelected;
@@ -319,11 +320,12 @@ export default function FilesPage() {
             {pagedFiles.map((file) => {
               const exposure = exposureOf(file);
               return (
-                <tr key={file.id}>
+                <tr key={file.id} data-testid={`file-row-${file.id}`}>
                   <td className="select-cell">
                     <input
                       type="checkbox"
                       aria-label={`Select file ${file.id}`}
+                      data-testid={`file-select-${file.id}`}
                       checked={selectedIds.has(file.id)}
                       onChange={() => toggleSelect(file.id)}
                     />
@@ -350,6 +352,7 @@ export default function FilesPage() {
                       <button
                         className="btn-warning btn-sm"
                         title="Expose to everyone"
+                        data-testid={`file-expose-${file.id}`}
                         onClick={() => exposeToEveryone(file.id)}
                       >
                         Expose
@@ -357,6 +360,7 @@ export default function FilesPage() {
                       <button
                         type="button"
                         className="btn-danger btn-sm"
+                        data-testid={`file-delete-${file.id}`}
                         onClick={() => setConfirmDeleteIds([file.id])}
                       >
                         Delete

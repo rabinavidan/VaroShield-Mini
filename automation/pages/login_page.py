@@ -16,3 +16,7 @@ class LoginPage:
         self.page.fill('[data-testid="login-email"]', email)
         self.page.fill('[data-testid="login-password"]', password)
         self.page.click('[data-testid="login-submit"]')
+
+    @allure.step("Wait for the login page to load")
+    def wait_for_load(self) -> None:
+        self.page.wait_for_selector('[data-testid="login-submit"]')

@@ -83,13 +83,13 @@ function RiskDetailDrawer({
 
   return (
     <div className="drawer-backdrop" onClick={onClose}>
-      <aside className="drawer" onClick={(e) => e.stopPropagation()}>
+      <aside className="drawer" data-testid="risk-drawer" onClick={(e) => e.stopPropagation()}>
         <div className="drawer-head">
           <div>
             <p className="flow-eyebrow">Risk alert #{risk.id}</p>
             <h2>File {risk.file_id}</h2>
           </div>
-          <button type="button" className="btn-outline btn-sm" onClick={onClose}>
+          <button type="button" className="btn-outline btn-sm" data-testid="risk-drawer-close" onClick={onClose}>
             Close
           </button>
         </div>
@@ -98,6 +98,7 @@ function RiskDetailDrawer({
           <button
             type="button"
             className={tab === "overview" ? "drawer-tab drawer-tab--active" : "drawer-tab"}
+            data-testid="risk-drawer-tab-overview"
             onClick={() => setTab("overview")}
           >
             Overview
@@ -105,6 +106,7 @@ function RiskDetailDrawer({
           <button
             type="button"
             className={tab === "log" ? "drawer-tab drawer-tab--active" : "drawer-tab"}
+            data-testid="risk-drawer-tab-log"
             onClick={() => setTab("log")}
           >
             Log
@@ -119,7 +121,9 @@ function RiskDetailDrawer({
             </div>
             <div className="drawer-field">
               <span>Status</span>
-              <span className={`badge badge-status-${risk.status}`}>{risk.status}</span>
+              <span className={`badge badge-status-${risk.status}`} data-testid="risk-drawer-status">
+                {risk.status}
+              </span>
             </div>
             <div className="drawer-field">
               <span>Reason</span>
@@ -133,17 +137,27 @@ function RiskDetailDrawer({
             {error && <p className="error">{error}</p>}
             <div style={{ display: "flex", gap: "0.75rem" }}>
               {risk.status === "open" && (
-                <button type="button" className="btn-warning" onClick={handleResolve} disabled={resolving}>
+                <button
+                  type="button"
+                  className="btn-warning"
+                  data-testid="risk-drawer-resolve"
+                  onClick={handleResolve}
+                  disabled={resolving}
+                >
                   {resolving ? "Resolving…" : "Mark resolved"}
                 </button>
               )}
-              <button type="button" className="btn-danger" onClick={onRequestDelete}>
+              <button type="button" className="btn-danger" data-testid="risk-drawer-delete" onClick={onRequestDelete}>
                 Delete
               </button>
             </div>
           </div>
         ) : (
-          <pre className="log-viewer" dangerouslySetInnerHTML={{ __html: formatJson(risk) }} />
+          <pre
+            className="log-viewer"
+            data-testid="risk-drawer-log"
+            dangerouslySetInnerHTML={{ __html: formatJson(risk) }}
+          />
         )}
       </aside>
     </div>
@@ -291,6 +305,7 @@ export default function RisksPage() {
                 <input
                   type="checkbox"
                   aria-label="Select all risks"
+                  data-testid="risks-select-all"
                   checked={allFilteredSelected}
                   ref={(el) => {
                     if (el) el.indeterminate = !allFilteredSelected && someFilteredSelected;
@@ -309,11 +324,17 @@ export default function RisksPage() {
           </thead>
           <tbody>
             {pagedRisks.map((risk) => (
-              <tr key={risk.id} className="table-row-clickable" onClick={() => setSelectedRiskId(risk.id)}>
+              <tr
+                key={risk.id}
+                className="table-row-clickable"
+                data-testid={`risk-row-${risk.id}`}
+                onClick={() => setSelectedRiskId(risk.id)}
+              >
                 <td className="select-cell" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     aria-label={`Select risk ${risk.id}`}
+                    data-testid={`risk-select-${risk.id}`}
                     checked={selectedIds.has(risk.id)}
                     onChange={() => toggleSelect(risk.id)}
                   />
@@ -333,6 +354,7 @@ export default function RisksPage() {
                   <button
                     type="button"
                     className="btn-danger btn-sm"
+                    data-testid={`risk-delete-${risk.id}`}
                     onClick={() => setConfirmDeleteIds([risk.id])}
                   >
                     Delete

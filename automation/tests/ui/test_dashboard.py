@@ -13,7 +13,7 @@ def test_dashboard_shows_summary_cards(authenticated_page, ui_base_url):
 
     with allure.step("Open dashboard page"):
         dashboard_page.open()
-        authenticated_page.wait_for_selector('[data-testid="dashboard-total-files"]')
+        dashboard_page.wait_for_load()
 
     with allure.step("Verify summary cards are visible"):
         allure.attach(dashboard_page.total_files_text(), name="total-files")
@@ -32,7 +32,7 @@ def test_admin_can_start_scan_from_dashboard(authenticated_page, ui_base_url):
 
     with allure.step("Open dashboard and start a scan"):
         dashboard_page.open()
-        authenticated_page.wait_for_selector('[data-testid="start-scan-button"]')
+        dashboard_page.wait_for_load()
         dashboard_page.start_scan()
 
     with allure.step("Wait for scan to reach done status"):

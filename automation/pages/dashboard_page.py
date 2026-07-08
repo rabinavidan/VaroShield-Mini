@@ -11,6 +11,10 @@ class DashboardPage:
     def open(self) -> None:
         self.page.goto(f"{self.base_url}/")
 
+    @allure.step("Wait for the dashboard to load")
+    def wait_for_load(self) -> None:
+        self.page.wait_for_selector('[data-testid="dashboard-total-files"]')
+
     @allure.step("Read total files stat")
     def total_files_text(self) -> str:
         return self.page.text_content('[data-testid="dashboard-total-files"]') or ""

@@ -55,23 +55,40 @@ export default function Navbar() {
       </div>
 
       <div className="navbar-links">
-        <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+        <NavLink
+          to="/"
+          end
+          data-testid="nav-dashboard"
+          className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+        >
           <DashboardIcon />
           Dashboard
         </NavLink>
-        <NavLink to="/files" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+        <NavLink
+          to="/files"
+          data-testid="nav-files"
+          className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+        >
           <FilesIcon />
           Files
         </NavLink>
-        <NavLink to="/risks" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+        <NavLink
+          to="/risks"
+          data-testid="nav-risks"
+          className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+        >
           <RisksIcon />
           Risks
         </NavLink>
       </div>
 
       <div className="navbar-actions">
-        {role && <span className="role-badge">{role}</span>}
-        <button className="btn-ghost" onClick={logout}>
+        {role && (
+          <span className="role-badge" data-testid="navbar-role-badge">
+            {role}
+          </span>
+        )}
+        <button className="btn-ghost" data-testid="nav-logout" onClick={logout}>
           Logout
         </button>
       </div>
