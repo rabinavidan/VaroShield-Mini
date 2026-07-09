@@ -51,7 +51,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-brand">
         <ShieldIcon />
-        <span>VaroShield</span>
+        <span>DSPM Sentinel</span>
       </div>
 
       <div className="navbar-links">

@@ -7,7 +7,7 @@ from app.routers import auth, dashboard, files, permissions, risks, scan
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="VaroShield Mini")
+app = FastAPI(title="DSPM Sentinel Mini")
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,4 +1,4 @@
-# VaroShield Mini Automation POC
+# DSPM Sentinel Mini Automation POC
 
 ## Why this project exists
 

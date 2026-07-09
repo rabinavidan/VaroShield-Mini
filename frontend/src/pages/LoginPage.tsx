@@ -41,7 +41,7 @@ export default function LoginPage() {
     <div className="login-hero">
       <div className="login-top">
         <div className="login-hero-head">
-          <p className="login-eyebrow">VaroShield Mini</p>
+          <p className="login-eyebrow">DSPM Sentinel Mini</p>
           <h1 className="login-headline">Data security posture, live.</h1>
           <p className="login-subcopy">
             A small DSPM simulation: sensitive-data discovery, permission exposure, async
